@@ -6,6 +6,11 @@ Requirements:
 - Node.JS (https://nodejs.org/en/download/)
 
 Instructions:
+- Create SSL certificate for the HTTPS server:
+	- In the terminal, type openssl req -nodes -new -x509 -keyout server.key -out server.cert
+	- For "Common Name (e.g. server FQDN or your name)" enter  localhost
+	- For email address, enter your email
+	- You may leave other fields blank
 - Open "phone-imu.maxpat" in Max
 - Click the "script npm install" message and wait for the packages to install (first time only)
 - Click the "script start" message to start the server
