@@ -16,10 +16,11 @@ fieldset {
     border: 0;
 }
 button {
-    -webkit-appearance: none;
+    /* -webkit-appearance: none; 
     border-radius: 5px;
     padding: .5em;
     margin: 1em 0;
+    */
     font-size: 12pt;
 }
 select {
