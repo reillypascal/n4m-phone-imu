@@ -1,17 +1,85 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Index | Phone IMU</title>
+        <title>Motion Sensor App</title>
+
         <link rel="stylesheet" href="global.css">
+
+        <script src="/socket.io/socket.io.js"></script>
     </head>
     <body>
-        <h1>Select performer:</h1>
-        <ul>
-            <li><a href="player1.html">Player 1</a></li>
-            <li><a href="player1.html">Player 2</a></li>
-            <li><a href="player1.html">Player 3</a></li>
-            <li><a href="player1.html">Player 4</a></li>
+        
+        <button id="accelPermsButton" onclick="getAccel()">Get Sensor Permissions</button>
+        <fieldset>
+            <p>Select performer:
+                <select id="performerSelect" name="performerSelect">
+                    <option value="/player1" selected>Player 1</option>
+                    <option value="/player2">Player 2</option>
+                    <option value="/player3">Player 3</option>
+                    <option value="/player4">Player 4</option>
+                </select>
+            </p>
+        </fieldset>
+        <h1>Device Orientation:</h1>
+        <p><span id="orientationAlpha"></span></p><br/>
+        <p><span id="orientationBeta"></span></p><br/>
+        <p><span id="orientationGamma"></span></p><br/>
+        <h1>Device Motion Rate:</h1>
+        <p><span id="motionAlpha"></span></p><br/>
+        <p><span id="motionBeta"></span></p><br/>
+        <p><span id="motionGamma"></span></p><br/>
+
+        <script>
+            let updateRate = 1/60;
+            const socket = io();
+            let selectedPlayer = io("/player1");
+
+            function wrap(inVal, mod) {
+                inVal %= mod;
+                return inVal < 0 ? inVal + mod : inVal;
+            }
+
+            function orientationHandler(event) {
+                document.getElementById('orientationAlpha').textContent = "Alpha: " + wrap(event.alpha + 180, 360).toFixed(2).toString();
+                document.getElementById('orientationBeta').textContent = "Beta: " + event.beta.toFixed(2).toString();
+                document.getElementById('orientationGamma').textContent = "Gamma: " + event.gamma.toFixed(2).toString();
+
+                selectedPlayer.emit('orient', {alpha: event.alpha, beta: event.beta, gamma: event.gamma});
+            }
+
+            function motionHandler(event) {
+                // if event.rotationRate, use that; else use event.accelerationIncludingGravity
+                if (event.rotationRate) {
+                    document.getElementById('motionAlpha').textContent = "Alpha: " + Math.round(event.rotationRate.alpha).toString();
+                    document.getElementById('motionBeta').textContent = "Beta: " + Math.round(event.rotationRate.beta).toString();
+                    document.getElementById('motionGamma').textContent = "Gamma: " + Math.round(event.rotationRate.gamma).toString();
+
+                    selectedPlayer.emit('motion', event.rotationRate);
+                } else {
+                    document.getElementById('motionAlpha').textContent = "X: " + Math.round(event.accelerationIncludingGravity.x).toString();
+                    document.getElementById('motionBeta').textContent = "Y: " + Math.round(event.accelerationIncludingGravity.y).toString();
+                    document.getElementById('motionGamma').textContent = "Z: " + Math.round(event.accelerationIncludingGravity.z).toString();
+
+                    selectedPlayer.emit('accel', event.accelerationIncludingGravity);
+                }
+            }
+            
+            let selector = document.getElementById("performerSelect");
+            selector.addEventListener('change', event => {
+                selectedPlayer = io(selector.value);
+            })
+
+            DeviceMotionEvent.requestPermission().then(response => {
+                if (response == 'granted') {
+                    // units in degrees
+                    window.addEventListener('deviceorientation', event => orientationHandler(event));
+
+                    // units in m/s^2
+                    window.addEventListener('devicemotion', event => motionHandler(event));
+                }
+            });
+        </script>
     </body>
 </html>

@@ -12,6 +12,9 @@ ul {
 ul li {
     padding: .25em 0;
 }
+fieldset {
+    border: 0;
+}
 button {
     -webkit-appearance: none;
     border-radius: 5px;
