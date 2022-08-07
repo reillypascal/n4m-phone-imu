@@ -22,6 +22,9 @@ button {
     margin: 1em 0;
     font-size: 12pt;
 }
+select {
+    font-size: 11pt;
+}
 h1 {
     margin: .5rem 0;
 }

@@ -11,11 +11,11 @@
     </head>
     <body>
         
-        <button id="accelPermsButton" onclick="getAccel()">Get Sensor Permissions</button>
+        <button id="accelPermsButton" onclick="getIMU()">Get Sensor Permissions</button>
         <fieldset>
             <p>Select performer:
                 <select id="performerSelect" name="performerSelect">
-                    <option value="/player1" selected>Player 1</option>
+                    <option value="/player1">Player 1</option>
                     <option value="/player2">Player 2</option>
                     <option value="/player3">Player 3</option>
                     <option value="/player4">Player 4</option>
@@ -50,36 +50,47 @@
             }
 
             function motionHandler(event) {
+                let motionAlpha = document.getElementById('motionAlpha');
+                let motionBeta = document.getElementById('motionBeta');
+                let motionGamma = document.getElementById('motionGamma');
                 // if event.rotationRate, use that; else use event.accelerationIncludingGravity
                 if (event.rotationRate) {
-                    document.getElementById('motionAlpha').textContent = "Alpha: " + Math.round(event.rotationRate.alpha).toString();
-                    document.getElementById('motionBeta').textContent = "Beta: " + Math.round(event.rotationRate.beta).toString();
-                    document.getElementById('motionGamma').textContent = "Gamma: " + Math.round(event.rotationRate.gamma).toString();
+                    motionAlpha.textContent = "Alpha: " + Math.round(event.rotationRate.alpha).toString();
+                    motionBeta.textContent = "Beta: " + Math.round(event.rotationRate.beta).toString();
+                    motionGamma.textContent = "Gamma: " + Math.round(event.rotationRate.gamma).toString();
 
                     selectedPlayer.emit('motion', event.rotationRate);
                 } else {
-                    document.getElementById('motionAlpha').textContent = "X: " + Math.round(event.accelerationIncludingGravity.x).toString();
-                    document.getElementById('motionBeta').textContent = "Y: " + Math.round(event.accelerationIncludingGravity.y).toString();
-                    document.getElementById('motionGamma').textContent = "Z: " + Math.round(event.accelerationIncludingGravity.z).toString();
+                    motionAlpha.textContent = "X: " + Math.round(event.accelerationIncludingGravity.x).toString();
+                    motionBeta.textContent = "Y: " + Math.round(event.accelerationIncludingGravity.y).toString();
+                    motionGamma.textContent = "Z: " + Math.round(event.accelerationIncludingGravity.z).toString();
 
                     selectedPlayer.emit('accel', event.accelerationIncludingGravity);
                 }
             }
-            
-            let selector = document.getElementById("performerSelect");
-            selector.addEventListener('change', event => {
-                selectedPlayer = io(selector.value);
-            })
 
-            DeviceMotionEvent.requestPermission().then(response => {
-                if (response == 'granted') {
-                    // units in degrees
-                    window.addEventListener('deviceorientation', event => orientationHandler(event));
+            function eventListenerUpdate() {
+                // units in degrees
+                window.removeEventListener('deviceorientation', event => orientationHandler(event));
+                window.addEventListener('deviceorientation', event => orientationHandler(event));
+                // units in m/s^2
+                window.removeEventListener('devicemotion', event => motionHandler(event));
+                window.addEventListener('devicemotion', event => motionHandler(event));
+            }
 
-                    // units in m/s^2
-                    window.addEventListener('devicemotion', event => motionHandler(event));
-                }
-            });
+            function getIMU(){
+                DeviceMotionEvent.requestPermission().then(response => {
+                    if (response == 'granted') {
+                        eventListenerUpdate();
+                        
+                        let selector = document.getElementById("performerSelect");
+                        selector.addEventListener('change', event => {
+                            selectedPlayer = io(selector.value);
+                            eventListenerUpdate();
+                        })
+                    }
+                });
+            }
         </script>
     </body>
 </html>
