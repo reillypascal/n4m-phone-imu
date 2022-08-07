@@ -1,5 +1,5 @@
 # n4m-phone-imu
-This project contains a Node.JS server to be run in "Node 4 Max". Node serves a webpage over the local network, and the webpage receives IMU values from a mobile phone and sends the values to Max via websockets.
+This project contains a Node.JS server to be run in Node For Max. Node serves a webpage over the local network, and the webpage receives IMU values from a mobile phone and sends the values to Max via websockets.
 
 Requirements:
 - Max 8
