@@ -16,3 +16,4 @@ Instructions:
 - Click the "script start" message to start the server
 - Navigate to https://<your-computer's-ip-address>:8000 on a mobile device and select the performer
 - Click "get sensor permissions" on the mobile webpage
+- Select the performer from the dropdown
