@@ -1,11 +1,11 @@
 /*
 TODO
+- page timeouts
 - touch area
-- fix "this page is not secure" 
-    expired certificate - valid for month prior to making?!
-    The certificate is not trusted because it is self-signed
 - styling
 */
+
+//////////////// SERVER ////////////////
 
 const maxApi = require("max-api");
 // requires mime and socket.io npm modules
@@ -52,37 +52,37 @@ const player2 = io.of("/player2");
 const player3 = io.of("/player3");
 const player4 = io.of("/player4");
 
-function socketEventParse(socket, namespace) {
-    console.log(namespace + ' connected');
-    socket.on('disconnect', () => {
-        console.log(namespace + ' disconnected');
+async function socketEventParse(socket, namespace) {
+    await maxApi.post(namespace.slice(1) + ' connected');
+    socket.on('disconnect', async () => {
+        await maxApi.post(namespace.slice(1) + ' disconnected');
     });
 
     // DeviceOrientationEvent
-    socket.on('orient', (msg) => {
-        maxApi.outlet(namespace, 'orientAlpha', wrap(msg.alpha + 180, 360));
-        maxApi.outlet(namespace, 'orientBeta', msg.beta);
-        maxApi.outlet(namespace, 'orientGamma', msg.gamma);
+    socket.on('orient', async (msg) => {
+        await maxApi.outlet(namespace, 'orientAlpha', wrap(msg.alpha + 180, 360) - 180);
+        await maxApi.outlet(namespace, 'orientBeta', msg.beta);
+        await maxApi.outlet(namespace, 'orientGamma', msg.gamma);
     });
     
     // DeviceMotionEvent
-    socket.on('motion', (msg) => {
-        maxApi.outlet(namespace, 'rateAlpha', msg.alpha);
-        maxApi.outlet(namespace, 'rateBeta', msg.beta);
-        maxApi.outlet(namespace, 'rateGamma', msg.gamma);
+    socket.on('motion', async (msg) => {
+        await maxApi.outlet(namespace, 'rateAlpha', msg.alpha);
+        await maxApi.outlet(namespace, 'rateBeta', msg.beta);
+        await maxApi.outlet(namespace, 'rateGamma', msg.gamma);
     });
     // if phone doesn't have gyroscope
-    socket.on('accel', (msg) => {
-        maxApi.outlet(namespace, 'accelX', msg.x);
-        maxApi.outlet(namespace, 'accelY', msg.y);
-        maxApi.outlet(namespace, 'accelZ', msg.z);
+    socket.on('accel', async (msg) => {
+        await maxApi.outlet(namespace, 'accelX', msg.x);
+        await maxApi.outlet(namespace, 'accelY', msg.y);
+        await maxApi.outlet(namespace, 'accelZ', msg.z);
     });
 }
 
-player1.on('connection', socket => socketEventParse(socket, "/player1"));
-player2.on('connection', socket => socketEventParse(socket, "/player2"));
-player3.on('connection', socket => socketEventParse(socket, "/player3"));
-player4.on('connection', socket => socketEventParse(socket, "/player4"));
+player1.on('connection', async (socket) => await socketEventParse(socket, "/player1"));
+player2.on('connection', async (socket) => await socketEventParse(socket, "/player2"));
+player3.on('connection', async (socket) => await socketEventParse(socket, "/player3"));
+player4.on('connection', async (socket) => await socketEventParse(socket, "/player4"));
 
 let {parse} = require("url");
 let {resolve, sep} = require("path");
@@ -124,3 +124,45 @@ methods.GET = async function(request) {
                 type: mime.getType(path)};
     }
 };
+
+//////////////// GET LOCAL IP ADDRESS ////////////////
+
+const { networkInterfaces } = require('os');
+
+const nets = networkInterfaces();
+const results = Object.create(null);
+
+async function displayIPAddress() {
+    try {
+        for (const name of Object.keys(nets)) {
+            for (const net of nets[name]) {
+                const familyV4Value = typeof net.family === 'string' ? 'IPv4' : 4;
+                if (net.family === familyV4Value && !net.internal) {
+                    if (!results[name]) {
+                        results[name] = [];
+                    }
+                    results[name].push(net.address);
+                }
+            }
+        }
+    } catch(e) {
+        await maxApi.post(e);
+    }
+    
+    if (Object.keys(results).length > 0) {
+        await maxApi.outlet("IP", "clear");
+        await maxApi.post("IP Address Info: ");
+
+        let reversedKeys = Object.keys(results).reverse();
+        reversedKeys.forEach(async (key) => {
+            await maxApi.outlet("IP", results[key][0]);
+            await maxApi.post(`${key}: ${results[key][0]}`);
+        });
+
+    } else {
+        await maxApi.outlet("IP", "clear");
+        await maxApi.outlet("IP", "error", "Could not retrieve IP address");
+        await maxApi.post("Could not retrieve IP address");
+    }
+}
+displayIPAddress();
