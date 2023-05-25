@@ -3,14 +3,14 @@ This project contains a Node.JS server to be run in Node For Max. Node serves a 
 
 Requirements:
 - Max 8
-- Node.JS (https://nodejs.org/en/download/)
 
 Instructions:
 - Create SSL certificate for the HTTPS server. The key should be named "server.key" and the certificate should be named "server.cert". For MacOS/Linux:
 ```sh
 	openssl req -nodes -new -x509 -days 2000 -keyout server.key -out server.cert
 ```
-	- note that you can set another number after the -days flag; this is how long the certificate will be valid
+
+- note that you can set another number after the -days flag; this is how long the certificate will be valid
 - SSL certificate fields:
 	- For "Common Name (e.g. server FQDN or your name)" enter  localhost
 	- For email address, enter your email
